@@ -2,83 +2,53 @@
 
 ## 概要
 
-固定スキーマに従ってJSONのバリデーションをするCLI。
+Node.js標準のHTTPサーバー機能によるWeb APIサーバー
 
-## コマンド
+## 基本仕様
 
-```sh
-validate <json_path>
-```
+- JSON API
+- レスポンスのコンテンツタイプは"application/json"
+- 成功時のステータスコードは200
+- 入力が仕様を満たさない場合は400
+  - 必須パラメーターが存在しない
+  - 必須パラメーターの形式が仕様を満たさない
 
-## 実行例
-
-```sh
-node src/main.ts validate user.json
-```
-
-## バリデーション仕様
-
-### JSONの固定スキーマ
-
-```ts
-type User = {
-  id: number
-  name: string
-  email: string
-  age?: number
-}
-```
-
-- 必須プロパティが存在しない場合は "<property> is required" と出力する
-- 必須チェックは値チェックより先に行う
-- 追加プロパティは許容しない
-- プロパティの型が異なる場合は "<property> must be a <type>" と出力する
-
-#### id
-
-- 1以上の整数
-- 上限値は考慮しなくてよい
-
-#### name
-
-- trim後の文字数が1~20文字
-- 文字数は`[...s].length`の数値とする
-
-#### email
-
-- "@"を1つだけ含む
-- 先頭と末尾は"@"ではない
-
-#### age
-
-- 0以上の整数
-- 省略可能
-- null不可能
-
-### 出力
-
-#### 成功時
+## 起動コマンド
 
 ```sh
-Valid
+node src/main.ts
 ```
 
-- 終了コード0
+## サポートするパス
 
-#### バリデーション失敗時
+### `/hello`
+
+- "hello"という固定文字列をレスポンスボディで返す
+
+### `/echo?word=${word}`
+
+- wordという名前のクエリ文字列をレスポンスボディで返す
+
+### `/numeronym?word=${word}`
+
+- wordという名前のクエリ文字列を入力とする
+- クエリ文字列をnumeronymに変換してレスポンスボディで返す
+- numeronymがわからなければ調査せよ
+
+#### 例
 
 ```sh
-Invalid:
-- id must be >= 1
-- name must be 1-20 characters
-- email must contain '@'
+curl 'http://localhost/numeronym?word=kubernetes'
+k8s
 ```
 
-- バリデーションエラーを全て列挙する
-- エラーは id, name, email, age の順に出力する
-- 終了コード1
+## 設計方針
 
-### その他の仕様
+- `src/main.ts`内でWebサーバーインスタンスを作成し、起動する
+- 各パスの実装はそれぞれ別のファイルに書く
 
-- JSON.parseに失敗した場合はInvalidとして扱う
-- エラーメッセージは "Invalid JSON"
+## 実装方針
+
+- `/numeronym`のみテストを実装する
+- テスト対象は`numeronym`関数とする
+- `numeronym`関数は文字列を入力するとnumeronym文字列を出力する
